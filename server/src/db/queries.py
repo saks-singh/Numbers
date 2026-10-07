@@ -220,6 +220,28 @@ def claim_next_run(conn, exclude_devices=None):
         return cur.fetchone()
 
 
+def adoptable_runs(conn):
+    """Runs a worker must adopt rather than claim.
+
+    A `running` row with an agent_job_id is a job that was dispatched and
+    then lost its watcher: the worker restarted, or was killed, while the
+    bench host carried on regardless. `claim_next_run` will never return it
+    -- it only looks at `queued` -- so without this the row sits in
+    `running` forever, the device it names stays blocked by the overlap
+    check, and the finished job and its artifacts sit unread on the agent.
+
+    The agent does the same thing from its side on startup (adopt a live
+    pid, finalize a dead one from its status document). This is the
+    coordinator's half of that.
+    """
+    with conn.cursor(row_factory=_dict_row()) as cur:
+        cur.execute(
+            "SELECT * FROM run WHERE status = 'running' "
+            "AND agent_job_id IS NOT NULL ORDER BY started_at"
+        )
+        return cur.fetchall()
+
+
 def try_lock_device(conn, device_id) -> bool:
     """Session-level advisory lock, held by the worker's own connection.
 

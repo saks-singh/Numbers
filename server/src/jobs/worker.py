@@ -106,6 +106,16 @@ class Worker:
         log.info("worker starting: backend=%s poll=%ss claim=%ss",
                  self.settings.runner_backend, self.settings.poll_interval,
                  self.settings.claim_interval)
+
+        # Before claiming anything new: pick up whatever a previous worker
+        # process was watching when it stopped. A restart during a job must
+        # not cost the run.
+        self.heartbeat()
+        try:
+            self.adopt_running()
+        except pool.DatabaseError as exc:
+            log.error("cannot look for runs to adopt: %s", exc)
+
         while True:
             if stop is not None and stop():
                 break
@@ -158,6 +168,88 @@ class Worker:
         except OSError as exc:
             log.warning("cannot write heartbeat %s: %s", path, exc)
         return path
+
+    # -- adoption --------------------------------------------------------
+    def adopt_running(self) -> int:
+        """Resume runs a previous worker process left in `running`.
+
+        `claim_next_run` only ever looks at `queued`, so a run that was
+        already dispatched when this process started is invisible to it. The
+        job itself is unaffected -- it is a child of the agent, not of us --
+        so the recovery is simply to start polling it again, which is why
+        this hands straight to the same `_poll`/`_finalize` pair a fresh run
+        uses. An already-finished job is read, ingested and closed on the
+        first poll, because `_poll` checks for a terminal state before it
+        checks the deadline.
+        """
+        with pool.connection() as conn:
+            stale = queries.adoptable_runs(conn)
+        if not stale:
+            return 0
+
+        log.info("adopting %s run(s) left in 'running' by a previous worker",
+                 len(stale))
+        return sum(1 for row in stale if self._adopt(row))
+
+    def _adopt(self, row) -> bool:
+        """Drive one abandoned run to a terminal status.
+
+        Every failure here is contained to this run and recorded on it. A
+        run we cannot adopt must not be left to take the worker down on
+        every restart -- that turns one lost run into a crash loop.
+        """
+        run_id = row["run_id"]
+        device_id = row["device_id"]
+
+        with pool.connection() as conn:
+            if not queries.try_lock_device(conn, device_id):
+                log.info("run %s: not adopting, another worker holds %s",
+                         run_id, device_id)
+                return False
+            try:
+                device = self.inventory.get(device_id)
+                if device is None:
+                    log.error("run %s names unknown device %s",
+                              run_id, device_id)
+                    queries.finish_run(
+                        conn, run_id, "failed", error_class="ConfigError",
+                        error_message=f"device {device_id} is not in "
+                                      f"devices.yaml")
+                    conn.commit()
+                    return False
+
+                runner = self.runner_for(device)
+                run_dir = self.settings.run_dir(run_id)
+                run_dir.mkdir(parents=True, exist_ok=True)
+                queries.set_run_fields(conn, run_id, readopted=True)
+                conn.commit()
+
+                budget = job_timeout_seconds(device.num_boots,
+                                             device.boot_timeout)
+                started = row.get("started_at")
+                elapsed = (_utcnow() - started).total_seconds() if started else 0.0
+                # Whatever is left of the original budget, but never zero:
+                # one poll has to happen, or a job that finished while we
+                # were gone would be declared timed out instead of ingested.
+                remaining = max(budget - elapsed, self.settings.poll_interval)
+
+                log.info("run %s: adopting %s, %.0fs into a %ss budget",
+                         run_id, device_id, elapsed, budget)
+                job, outcome = self._poll(conn, run_id, device, runner,
+                                          self._now() + remaining)
+                self._finalize(conn, row, device, runner, job, outcome)
+                return True
+            except Exception as exc:
+                conn.rollback()
+                log.exception("run %s: adoption failed", run_id)
+                queries.finish_run(conn, run_id, "failed",
+                                   error_class=type(exc).__name__,
+                                   error_message=f"adoption failed: {exc}")
+                conn.commit()
+                return False
+            finally:
+                queries.unlock_device(conn, device_id)
+                conn.commit()
 
     def run_once(self):
         """Claim one run and drive it to completion. None if the queue is

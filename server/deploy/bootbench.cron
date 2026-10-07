@@ -19,14 +19,25 @@
 # TZ must match server.yaml's `timezone` and both systemd units. croniter
 # reads local time; disagreement moves the nightly relative to when the
 # build share publishes, which shows up as "it ran before the build existed".
+#
+# Both lines source /etc/bootbench/env by hand. cron inherits nothing from
+# the systemd units, so `EnvironmentFile=` does not apply here -- and
+# without BOOTBENCH_AGENT_TOKEN the tick reaches step 5, gets a 401 from the
+# agent, and records `agent_unhealthy`. That is a clean skip-with-reason
+# rather than an error, so the nightly just quietly never runs.
+#
+# The `[ -r ]` guard is not decoration: `.` is a special built-in, and in
+# dash a failed `.` exits the shell outright, which would take the tick with
+# it. The guard makes a missing file behave like systemd's `-` prefix.
+# `set -a` is what exports the assignments into the python process.
 
 TZ=Asia/Kolkata
 MAILTO=""
 PATH=/usr/bin:/bin
 
-*/15 * * * * bootbench cd /opt/bootbench/server && .venv/bin/python main.py tick >> /var/log/bootbench/tick.log 2>&1
+*/15 * * * * bootbench set -a; [ -r /etc/bootbench/env ] && . /etc/bootbench/env; set +a; cd /opt/bootbench/server && .venv/bin/python main.py tick >> /var/log/bootbench/tick.log 2>&1
 
 # Retention. Nothing else trims anything: the skill's own report caps itself
 # at 30 runs, but the pulled log trees are unbounded and a night is tens of
 # MB per device.
-17 4 * * * bootbench cd /opt/bootbench/server && .venv/bin/python main.py gc >> /var/log/bootbench/gc.log 2>&1
+17 4 * * * bootbench set -a; [ -r /etc/bootbench/env ] && . /etc/bootbench/env; set +a; cd /opt/bootbench/server && .venv/bin/python main.py gc >> /var/log/bootbench/gc.log 2>&1
