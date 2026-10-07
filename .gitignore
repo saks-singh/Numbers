@@ -4,9 +4,26 @@ client/agentconfig.json
 
 # Runtime state. On the server these are mirrored artifacts and job logs;
 # on a bench host they are the real thing. Neither belongs in git.
-artifacts/
-jobs/
+#
+# ANCHORED WITH A LEADING SLASH ON PURPOSE. An unanchored `jobs/` matches a
+# directory of that name at ANY depth, so it also swallowed the source
+# package server/src/jobs/ -- worker.py and gc.py never reached git, and the
+# first symptom was the worker unit crash-looping on
+# "ModuleNotFoundError: No module named 'src.jobs'". Keep these anchored.
+#
+# If you add a pattern here, check it caught nothing it should not:
+#     git check-ignore -v $(git ls-files --others --cached)
+#
+/artifacts/
+/jobs/
+server/artifacts/
+client/artifacts/
 *.log
+
+# ...but the boot-log fixtures are test INPUT, not runtime output. The
+# parser reads journalctl.log by that exact name, so they cannot be renamed
+# to dodge the pattern above.
+!server/tests/fixtures/**/*.log
 
 # devices.yaml is deliberately NOT ignored. The inventory is configuration,
 # not state: "what was configured on the night that run failed" has to stay

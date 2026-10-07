@@ -19,14 +19,27 @@ WorkingDirectory=/opt/bootbench/server
 Environment=TZ=Asia/Kolkata
 Environment=PYTHONUNBUFFERED=1
 
+# waitress-serve is a console script in the venv's bin/, so Python puts THAT
+# directory on sys.path -- not WorkingDirectory. `main.py` inserts its own
+# directory when it runs, but nothing runs main.py here, so `src` has to be
+# made importable explicitly or the unit dies with
+# "ModuleNotFoundError: No module named 'src'".
+Environment=PYTHONPATH=/opt/bootbench/server
+
 # Secrets by environment, not in a config file. Mode 0600, owned by
 # bootbench. Holds BOOTBENCH_DB_DSN, BOOTBENCH_AGENT_TOKEN,
 # BOOTBENCH_TRIGGER_TOKEN.
 EnvironmentFile=-/etc/bootbench/env
 
+# The factory is src.web.app:create_app, NOT main:create_app -- main.py is
+# the CLI and only imports the factory inside cmd_serve. Called with no
+# arguments it loads server.yaml and resolves devices.yaml itself.
+#
+# Change --listen to 0.0.0.0:8080 to reach the dashboard from the lab
+# network; see the README on why 127.0.0.1 is the default.
 ExecStart=/opt/bootbench/server/.venv/bin/waitress-serve \
     --listen=127.0.0.1:8080 \
-    --call main:create_app
+    --call src.web.app:create_app
 
 Restart=always
 RestartSec=5

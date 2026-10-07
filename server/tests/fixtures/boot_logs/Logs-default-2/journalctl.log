@@ -1,0 +1,4 @@
+-- Journal begins at Mon 2026-10-05 01:02:11 UTC --
+[    1.902551] localhost systemd[1]: systemd 254.4+ running in system mode.
+[    2.962118] localhost systemd[1]: Reached target System Initialization.
+[   12.481002] localhost systemd[1]: Reached target Multi-User System.
