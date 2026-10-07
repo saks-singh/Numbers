@@ -1,6 +1,6 @@
-# bootbench-nightly
+# Numbers
 
-Nightly boot-time benchmarking for Qualcomm IQ boards.
+Nightly boot-time benchmarking for Qualcomm boards.
 
 A **Linux coordinator** schedules runs, keeps history in Postgres, and serves a
 dashboard. A **long-lived HTTP agent on each Windows bench host** owns the
