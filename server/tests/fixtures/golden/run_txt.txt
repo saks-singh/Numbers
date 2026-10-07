@@ -1,0 +1,32 @@
+Device: iq-9075-evk
+Timestamp: 2026-10-06 01:04
+Build path: \\swayam\QLI_Builds\Yocto\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\performance
+Phase: default (boot 1)
+
+Metrics:
+  NHLOS (PBL/SBL/XBL firmware + ABL loader): 5.035 s  (4.318 s firmware + 0.717 s loader)
+  Kernel time: 1.573 s
+  Initramfs (<code>Run /init</code> &rarr; epoch advance): 0.458 s  (1.433 s → 1.891 s)
+  systemd &rarr; sysinit.target: 1.071 s  (1.891 s → 2.962 s)
+    #1. systemd-journal-flush.service: 1.012 s
+    #2. systemd-udevd.service: 0.349 s
+    #3. systemd-fsck-root.service: 0.241 s
+    #4. systemd-remount-fs.service: 0.174 s
+    #5. systemd-tmpfiles-setup.service: 0.057 s
+  Total time till sysinit.target: 8.137 s
+  Total time till multi-user.target: 19.089 s
+    #1. android-tools-adbd.service: 10.416 s
+    #2. NetworkManager-wait-online.service: 4.810 s
+    #3. docker.service: 4.361 s
+    #4. systemd-journal-flush.service: 1.012 s
+    #5. systemd-udevd.service: 0.349 s
+    #6. NetworkManager.service: 0.290 s
+
+Critical chain: multi-user.target -> docker.service -> network-online.target -> NetworkManager-wait-online.service -> NetworkManager.service -> dbus.socket -> sysinit.target
+
+Overall Suspected Overheads:
+  #1. android-tools-adbd.service: 10.416 s
+  #2. NetworkManager-wait-online.service: 4.810 s
+  #3. docker.service: 4.361 s
+
+Source: systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.433s, System time advanced to built-in epoch @1.891s, systemd running @1.903s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration

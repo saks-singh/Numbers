@@ -1,0 +1,7 @@
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x414fd0b1]
+[    0.000000] Linux version 6.6.28-qcom (oe-user@oe-host) #1 SMP PREEMPT
+[    0.000000] Kernel command line: console=ttyMSM0,115200n8 root=PARTUUID=abc rw
+[    1.433117] Run /init as init process
+[    1.891204] systemd[1]: System time advanced to built-in epoch
+[    1.902551] systemd[1]: systemd 254.4+ running in system mode (+PAM +AUDIT)
+[    2.962000] systemd[1]: Reached target sysinit.target

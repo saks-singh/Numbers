@@ -1,0 +1,821 @@
+[
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": ""
+      },
+      "initramfs": {
+        "value": "0.458 s",
+        "note": "1.433 s → 1.891 s"
+      },
+      "sysinit_svc": {
+        "value": "1.071 s",
+        "note": "1.891 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.137 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.458,
+      "sysinit_svc": 1.071,
+      "total_sysinit": 8.137,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.433,
+      "epoch_advanced": 1.891,
+      "systemd_running": 1.903,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.433s, System time advanced to built-in epoch @1.891s, systemd running @1.903s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "default",
+    "log_name": "default-1"
+  },
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": ""
+      },
+      "initramfs": {
+        "value": "0.458 s",
+        "note": "1.433 s → 1.891 s"
+      },
+      "sysinit_svc": {
+        "value": "1.071 s",
+        "note": "1.891 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.137 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.458,
+      "sysinit_svc": 1.071,
+      "total_sysinit": 8.137,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.433,
+      "epoch_advanced": 1.891,
+      "systemd_running": 1.903,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.433s, System time advanced to built-in epoch @1.891s, systemd running @1.903s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "default",
+    "log_name": "default-2"
+  },
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": ""
+      },
+      "initramfs": {
+        "value": "0.458 s",
+        "note": "1.433 s → 1.891 s"
+      },
+      "sysinit_svc": {
+        "value": "1.071 s",
+        "note": "1.891 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.137 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.458,
+      "sysinit_svc": 1.071,
+      "total_sysinit": 8.137,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.433,
+      "epoch_advanced": 1.891,
+      "systemd_running": 1.903,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.433s, System time advanced to built-in epoch @1.891s, systemd running @1.903s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "default",
+    "log_name": "default-3"
+  },
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "pcibios_init+0x0/0x40",
+            "time": "0.413 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "1c00000.ufshc",
+            "time": "0.198 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "clk_disable_unused+0x0/0x100",
+            "time": "0.091 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "regulator_init_complete+0x0/0x80",
+            "time": "rc=-19",
+            "note": "probe/initcall failure"
+          },
+          {
+            "name": "soc:qcom,venus",
+            "time": "error -517",
+            "note": "probe failure"
+          }
+        ]
+      },
+      "initramfs": {
+        "value": "0.517 s",
+        "note": "1.498 s → 2.015 s"
+      },
+      "sysinit_svc": {
+        "value": "0.947 s",
+        "note": "2.015 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.072 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.517,
+      "sysinit_svc": 0.947,
+      "total_sysinit": 8.072,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.498,
+      "epoch_advanced": 2.015,
+      "systemd_running": 2.028,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.498s, System time advanced to built-in epoch @2.015s, systemd running @2.028s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "debug",
+    "log_name": "debug-1"
+  },
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "pcibios_init+0x0/0x40",
+            "time": "0.413 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "1c00000.ufshc",
+            "time": "0.198 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "clk_disable_unused+0x0/0x100",
+            "time": "0.091 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "regulator_init_complete+0x0/0x80",
+            "time": "rc=-19",
+            "note": "probe/initcall failure"
+          },
+          {
+            "name": "soc:qcom,venus",
+            "time": "error -517",
+            "note": "probe failure"
+          }
+        ]
+      },
+      "initramfs": {
+        "value": "0.517 s",
+        "note": "1.498 s → 2.015 s"
+      },
+      "sysinit_svc": {
+        "value": "0.947 s",
+        "note": "2.015 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.072 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.517,
+      "sysinit_svc": 0.947,
+      "total_sysinit": 8.072,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.498,
+      "epoch_advanced": 2.015,
+      "systemd_running": 2.028,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.498s, System time advanced to built-in epoch @2.015s, systemd running @2.028s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "debug",
+    "log_name": "debug-2"
+  },
+  {
+    "timestamp": "2026-10-06 01:04",
+    "build_path": "\\\\swayam\\QLI_Builds\\Yocto\\qcom-multimedia-proprietary-image_Nightly_Build_master_2471\\performance",
+    "metrics": {
+      "nhlos": {
+        "value": "5.035 s",
+        "note": "4.318 s firmware + 0.717 s loader"
+      },
+      "kernel": {
+        "value": "1.573 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "pcibios_init+0x0/0x40",
+            "time": "0.413 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "1c00000.ufshc",
+            "time": "0.198 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "clk_disable_unused+0x0/0x100",
+            "time": "0.091 s",
+            "note": "slowest probe/initcall"
+          },
+          {
+            "name": "regulator_init_complete+0x0/0x80",
+            "time": "rc=-19",
+            "note": "probe/initcall failure"
+          },
+          {
+            "name": "soc:qcom,venus",
+            "time": "error -517",
+            "note": "probe failure"
+          }
+        ]
+      },
+      "initramfs": {
+        "value": "0.517 s",
+        "note": "1.498 s → 2.015 s"
+      },
+      "sysinit_svc": {
+        "value": "0.947 s",
+        "note": "2.015 s → 2.962 s",
+        "hitters": [
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "systemd-fsck-root.service",
+            "time": "0.241 s"
+          },
+          {
+            "name": "systemd-remount-fs.service",
+            "time": "0.174 s"
+          },
+          {
+            "name": "systemd-tmpfiles-setup.service",
+            "time": "0.057 s"
+          }
+        ]
+      },
+      "total_sysinit": {
+        "value": "8.072 s",
+        "note": ""
+      },
+      "total_multiuser": {
+        "value": "19.089 s",
+        "note": "",
+        "hitters": [
+          {
+            "name": "android-tools-adbd.service",
+            "time": "10.416 s"
+          },
+          {
+            "name": "NetworkManager-wait-online.service",
+            "time": "4.810 s"
+          },
+          {
+            "name": "docker.service",
+            "time": "4.361 s"
+          },
+          {
+            "name": "systemd-journal-flush.service",
+            "time": "1.012 s"
+          },
+          {
+            "name": "systemd-udevd.service",
+            "time": "0.349 s"
+          },
+          {
+            "name": "NetworkManager.service",
+            "time": "0.290 s"
+          }
+        ]
+      }
+    },
+    "critical_chain": [
+      "multi-user.target",
+      "docker.service",
+      "network-online.target",
+      "NetworkManager-wait-online.service",
+      "NetworkManager.service",
+      "dbus.socket",
+      "sysinit.target"
+    ],
+    "overall_overheads": [
+      {
+        "name": "android-tools-adbd.service",
+        "time": "10.416 s"
+      },
+      {
+        "name": "NetworkManager-wait-online.service",
+        "time": "4.810 s"
+      },
+      {
+        "name": "docker.service",
+        "time": "4.361 s"
+      }
+    ],
+    "optimization_possibilities": null,
+    "seconds": {
+      "nhlos": 5.035,
+      "kernel": 1.573,
+      "initramfs": 0.517,
+      "sysinit_svc": 0.947,
+      "total_sysinit": 8.072,
+      "total_multiuser": 19.089,
+      "grand_total": 19.09,
+      "firmware": 4.318,
+      "loader": 0.717,
+      "userspace": 12.482,
+      "sat_total": 19.091,
+      "init_exec": 1.498,
+      "epoch_advanced": 2.015,
+      "systemd_running": 2.028,
+      "sysinit_target": 2.962,
+      "cc_multiuser": 12.481
+    },
+    "source": "systemd-analyze time -> Startup finished in 4.318s (firmware) + 0.717s (loader) + 1.573s (kernel) + 12.482s (userspace) = 19.091s; dmesg: Run /init @1.498s, System time advanced to built-in epoch @2.015s, systemd running @2.028s; journalctl: Reached target System Initialization @2.962s; initramfs = Run/init -> epoch-advance; sysinit_svc = epoch-advance -> sysinit.target; sysinit hitters from `systemd-analyze critical-chain sysinit.target` (+cost per unit); multi-user hitters from `systemd-analyze blame`; kernel hitters (debug boots only) from initcall_debug dmesg output; overall_overheads pools kernel/sysinit/multi-user hitters and ranks by actual duration",
+    "phase": "debug",
+    "log_name": "debug-3"
+  }
+]

@@ -1,0 +1,48 @@
+defaults:
+  # The Windows bench host running client/agent.py.
+  agent_url: "http://bench-win-01:8765"
+
+  # Boots per phase. The capture stage runs this many default-cmdline boots
+  # and then this many debug-cmdline boots, so 3 means 6 boots per run.
+  num_boots: 3
+  boot_timeout: 480
+
+  # Evaluated per device with croniter against the last recorded tick, so a
+  # window missed because the coordinator was down is still caught later the
+  # same day rather than silently skipped.
+  schedule: "0 1 * * *"
+
+  # Always "all". A bare `capture` reuses whatever state the last run left on
+  # the device -- a masked rmtfs.service and a debug kernel cmdline -- which
+  # makes its numbers incomparable with a post-flash boot. See README.
+  stages: "all"
+
+  # Boot_Trace.txt, plot_systemd.svg, proc_config.txt and lsmod.txt are tens
+  # of MB per night and nothing parses them. Turn on per device when
+  # investigating something specific.
+  fetch_full_logs: false
+
+  max_retries: 1
+
+devices:
+  iq-9075-evk-01:
+    enabled: true
+    target: iq-9075-evk
+
+    # Optional for a single-board bench host; REQUIRED once two boards share
+    # one agent_url. Without them bootbench's COM auto-probe will open the
+    # other board's live console mid-capture, the TAC call raises on an
+    # ambiguous device count, and unqualified adb picks a board arbitrarily.
+    com_port: COM7
+    tac_port: VTP8
+    adb_serial: "1a2b3c4d5e"
+
+    notes: "lab rack 3, slot 2"
+
+  # Adding a device is this block and nothing else -- no code change, no
+  # crontab change, no migration.
+  #
+  # iq-8275-evk-01:
+  #   enabled: true
+  #   target: iq-8275-evk
+  #   agent_url: "http://bench-win-02:8765"

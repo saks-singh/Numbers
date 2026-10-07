@@ -1,0 +1,34 @@
+{
+  "_comment": [
+    "Copy to agentconfig.json next to agent.py and edit. This file describes",
+    "THIS bench host's filesystem -- the coordinator never sees any of it.",
+    "No secret goes in here: the bearer token is read from the environment",
+    "variable named by token_env."
+  ],
+
+  "bind": "0.0.0.0",
+  "port": 8765,
+  "token_env": "BOOTBENCH_AGENT_TOKEN",
+
+  "python": "py -3",
+  "_bootbench_comment": "The copy of bootbench.py that ships in this directory. Pointing this at a separate skill checkout works, but then the coordinator parses with one vintage of the regexes while this host produced the logs with another -- and the symptom is a wrong-but-plausible number, not an error.",
+  "bootbench": "C:/bench/client/bootbench.py",
+  "pcat_exe": "C:/Program Files (x86)/Qualcomm/PCAT/bin/PCAT.exe",
+
+  "share_root": "\\\\swayam\\QLI_Builds\\Yocto",
+
+  "_artifact_root_comment": "Must NOT be inside OneDrive -- the agent refuses to start if it is. Sync storms and file locking make adb pull fail mid-write.",
+  "artifact_root": "C:/bench/artifacts",
+
+  "keep_jobs": 200,
+
+  "_devices_comment": "The agent refuses any device_id not listed here, so a misconfigured coordinator cannot ask this host to drive a board it does not own. com_port/tac_port/adb_serial are optional for a single-device host but REQUIRED once two boards share one bench host -- otherwise bootbench's COM auto-probe will open the other device's live console mid-capture.",
+  "devices": {
+    "iq-9075-evk-01": {
+      "target": "iq-9075-evk",
+      "com_port": "COM7",
+      "tac_port": "VTP8",
+      "adb_serial": "1a2b3c4d5e"
+    }
+  }
+}

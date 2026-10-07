@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% set nav = 'runs' %}
+{% block title %}bootbench — runs &amp; logs{% endblock %}
+
+{% block body %}
+<h1>Runs &amp; logs</h1>
+<p class="sub">
+  Every dispatch this coordinator has recorded, with what came back from the
+  bench host. {{ total }} run{{ '' if total == 1 else 's' }} in the database;
+  the {{ runs|length }} shown here account for
+  {{ mirrored_bytes|filesize }} of mirrored artifacts on this server.
+</p>
+
+<div class="panel">
+  <form method="get" class="row" style="gap:12px">
+    <label class="muted">device
+      <select name="device" onchange="this.form.submit()">
+        <option value="">all</option>
+        {% for d in devices %}
+        <option value="{{ d.device_id }}" {{ 'selected' if d.device_id == selected }}>{{ d.device_id }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="muted">status
+      <select name="status" onchange="this.form.submit()">
+        <option value="">any</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}{% if counts.get(s) %} ({{ counts[s] }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="muted">show
+      <select name="limit" onchange="this.form.submit()">
+        {% for n in (50, 100, 250, 500) %}
+        <option value="{{ n }}" {{ 'selected' if n == limit }}>{{ n }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <span class="grow"></span>
+    <noscript><button type="submit">Apply</button></noscript>
+  </form>
+</div>
+
+{% if runs %}
+<table>
+  <thead>
+    <tr>
+      <th class="n">Run</th>
+      <th>Device</th>
+      <th class="n">Build</th>
+      <th>Queued</th>
+      <th>Finished</th>
+      <th>Status</th>
+      <th class="n">Multi-user</th>
+      <th>Trigger</th>
+      <th class="n">Files</th>
+      <th>Artifacts</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in runs %}
+    <tr>
+      <td class="n"><a href="{{ url_for('bootbench.run', run_id=r.run_id) }}">{{ r.run_id }}</a></td>
+      <td>
+        <a href="{{ url_for('bootbench.device', device_id=r.device_id) }}">{{ r.device_id }}</a>
+        <span class="muted mono">{{ r.target or '' }}</span>
+      </td>
+      <td class="n" title="{{ r.build_folder or 'no build folder recorded' }}">
+        {{ r.build_number if r.build_number is not none else '—' }}
+      </td>
+      <td class="num">{{ r.queued_at|stamp('%Y-%m-%d %H:%M') }}</td>
+      <td class="num">{{ r.finished_at|stamp('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        <span class="tag {{ r.status|status_class }}">{{ r.status }}</span>
+        {% if r.failure_stage %}<span class="muted mono">{{ r.failure_stage }}</span>{% endif %}
+        {% if r.reflashed is sameas false %}<span class="muted" title="no flash stage; not comparable across runs">no flash</span>{% endif %}
+      </td>
+      <td class="n">{{ r.total_multiuser_s|seconds }}</td>
+      <td class="muted">
+        {{ r.trigger_source }}{% if r.triggered_by %} · {{ r.triggered_by }}{% endif %}
+      </td>
+      <td class="n">
+        {% if r.mirror.present %}
+        {{ r.mirror.count }}
+        <span class="muted">{{ r.mirror.bytes|filesize }}</span>
+        {% else %}<span class="muted">—</span>{% endif %}
+      </td>
+      <td>
+        {% if r.mirror.present %}
+        <a href="{{ url_for('bootbench.run_log', run_id=r.run_id) }}">log</a>
+        · <a href="{{ url_for('bootbench.run', run_id=r.run_id) }}#files">files</a>
+        {% else %}
+        <span class="muted">none</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="muted" style="font-size:12px">
+  <strong>Files</strong> is counted by walking this run's mirror directory
+  now, so it reflects what is still on disk rather than what was once
+  fetched — a run pruned by <span class="mono">main.py gc</span> keeps its
+  row and its numbers but reports no files. Build paths and the full
+  per-file listing are on each run's page.
+</p>
+{% else %}
+<p class="empty">
+  No runs match. {% if selected or status %}<a href="{{ url_for('bootbench.runs') }}">Clear the filters</a>.
+  {% else %}Nothing has been dispatched yet — press <em>Run now</em> on a
+  device, or wait for <span class="mono">main.py tick</span>.{% endif %}
+</p>
+{% endif %}
+{% endblock %}

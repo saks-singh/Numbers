@@ -1,0 +1,27 @@
+# Half of this repo is checked out onto Windows and half onto Linux, and the
+# golden-file tests compare rendered HTML byte for byte. Pinning LF in the
+# working tree keeps a Windows checkout from failing those tests for no
+# reason other than its line endings.
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.md    text eol=lf
+*.sql   text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.html  text eol=lf
+*.service text eol=lf
+*.cron  text eol=lf
+
+# .bat is the one exception: cmd.exe needs CRLF.
+*.bat   text eol=crlf
+
+# Fixtures are captured device output. Treated as text so diffs are
+# readable, but they are snapshots -- regenerate with make_golden.py rather
+# than editing by hand.
+server/tests/fixtures/** text eol=lf
+
+*.svg   text eol=lf
+*.png   binary

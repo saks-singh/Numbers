@@ -1,0 +1,10 @@
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x414fd0b1]
+[    0.000000] Kernel command line: console=ttyMSM0,115200n8 root=PARTUUID=abc rw initcall_debug log_buf_len=4M systemd.log_level=debug
+[    0.104221] initcall pcibios_init+0x0/0x40 returned 0 after 412887 usecs
+[    0.212004] probe of 1c00000.ufshc returned 0 after 198441 usecs
+[    0.318882] initcall clk_disable_unused+0x0/0x100 returned 0 after 91204 usecs
+[    0.402118] initcall regulator_init_complete+0x0/0x80 returned -19 after 8821 usecs
+[    0.511904] soc:qcom,venus: probe with driver venus failed with error -517
+[    1.498332] Run /init as init process
+[    2.014882] systemd[1]: System time advanced to built-in epoch
+[    2.028104] systemd[1]: systemd 254.4+ running in system mode (+PAM +AUDIT)

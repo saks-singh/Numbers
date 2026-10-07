@@ -1,0 +1,27 @@
+# Secrets. Both of these have an .example sibling that IS tracked.
+server/config/credentials.yaml
+client/agentconfig.json
+
+# Runtime state. On the server these are mirrored artifacts and job logs;
+# on a bench host they are the real thing. Neither belongs in git.
+artifacts/
+jobs/
+*.log
+
+# devices.yaml is deliberately NOT ignored. The inventory is configuration,
+# not state: "what was configured on the night that run failed" has to stay
+# answerable from history. Only credentials.yaml holds secrets.
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~

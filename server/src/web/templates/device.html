@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% set nav = 'devices' %}
+{% block title %}bootbench — {{ device.device_id }}{% endblock %}
+
+{% block body %}
+<div class="panel-head">
+  <h1>{{ device.device_id }}</h1>
+  {% if not device.enabled %}<span class="tag muted">disabled</span>{% endif %}
+  <span class="grow"></span>
+  {% if device.enabled and token_required %}
+  <form class="inline" method="post"
+        action="{{ url_for('bootbench.api_trigger', device_id=device.device_id) }}">
+    <input type="hidden" name="token" value="">
+    <button class="primary" type="submit">Run now</button>
+  </form>
+  {% endif %}
+</div>
+<p class="sub">
+  {{ device.target }} · {{ device.agent_host }} · schedule
+  <span class="mono">{{ device.schedule }}</span> ·
+  {{ device.num_boots }}×2 boots ·
+  <span id="agent-health" class="muted">checking agent…</span>
+</p>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Boot time by build</h2>
+    <span class="muted">{{ phase }} phase, boot {{ boot_index }}</span>
+    <span class="grow"></span>
+    <span class="muted" style="font-size:12px">
+      {% for name in ('default', 'debug') %}
+      <a href="?phase={{ name }}&boot={{ boot_index }}"
+         class="{{ 'muted' if name != phase }}">{{ name }}</a>{{ ' · ' if not loop.last }}
+      {% endfor %}
+      &nbsp;|&nbsp;
+      {% for index in range(1, device.num_boots + 1) %}
+      <a href="?phase={{ phase }}&boot={{ index }}"
+         class="{{ 'muted' if index != boot_index }}">{{ index }}</a>{{ ' · ' if not loop.last }}
+      {% endfor %}
+    </span>
+  </div>
+
+  {% if geometry.points %}
+  {% include "_chart.html" with context %}
+  <p class="muted" style="font-size:12px;margin:8px 0 0">
+    multi-user.target, seconds. Amber and red dots are partial and failed
+    runs. Only <span class="mono">phase=default, boot=1</span> is comparable
+    across runs: the collect script masks
+    <span class="mono">rmtfs.service</span> persistently, so boots 2 and 3 of
+    any run are a different system.
+  </p>
+  {% else %}
+  <p class="empty">
+    Nothing to plot for {{ phase }}/boot {{ boot_index }} yet.
+  </p>
+  {% endif %}
+</div>
+
+<div class="panel-head">
+  <h2>Runs</h2>
+  <span class="grow"></span>
+  <a href="{{ url_for('bootbench.runs', device=device.device_id) }}">all runs &amp; logs</a>
+</div>
+{% if runs %}
+<table>
+  <thead>
+    <tr>
+      <th class="n">Run</th><th class="n">Build</th><th>When</th><th>Status</th>
+      {% for key, label in metrics %}<th class="n">{{ label }}</th>{% endfor %}
+      <th></th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in runs %}
+    <tr>
+      <td class="n"><a href="{{ url_for('bootbench.run', run_id=r.run_id) }}">{{ r.run_id }}</a></td>
+      <td class="n">{{ r.build_number if r.build_number is not none else '—' }}</td>
+      <td class="num">{{ (r.started_at or r.queued_at)|stamp }}</td>
+      <td>
+        <span class="tag {{ r.status|status_class }}">{{ r.status }}</span>
+        {% if r.reflashed is sameas false %}<span class="muted" title="no flash stage; not comparable">no flash</span>{% endif %}
+      </td>
+      {% for key, label in metrics %}
+      <td class="n">{{ r[key]|seconds }}</td>
+      {% endfor %}
+      <td class="muted">
+        {% if r.failure_stage %}{{ r.failure_stage }}
+        {% elif r.trigger_source != 'cron' %}{{ r.trigger_source }}{% endif %}
+      </td>
+      <td><a href="{{ url_for('bootbench.run', run_id=r.run_id) }}#files">logs</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No runs for this device yet.</p>
+{% endif %}
+
+<h2>Recent decisions</h2>
+{% if decisions %}
+<table>
+  <thead>
+    <tr><th>When</th><th>Action</th><th>Reason</th><th class="n">Build</th><th>Detail</th></tr>
+  </thead>
+  <tbody>
+  {% for d in decisions %}
+    <tr>
+      <td class="num">{{ d.decided_at|stamp('%Y-%m-%d %H:%M') }}</td>
+      <td><span class="tag {{ d.action|action_class }}">{{ d.action }}</span></td>
+      <td class="mono">{{ d.reason }}</td>
+      <td class="n">{{ d.build_number if d.build_number is not none else '—' }}</td>
+      <td class="muted">{{ d.detail or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="font-size:12px">
+  Full log on <a href="{{ url_for('bootbench.schedule', device=device.device_id) }}">the schedule page</a>.
+</p>
+{% else %}
+<p class="empty">No scheduler decisions recorded yet — has <span class="mono">main.py tick</span> run?</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{# Agent health is fetched rather than rendered server-side so a logged-out
+   bench host cannot make this page slow to load. The coordinator proxies and
+   caches it, so the browser never needs the agent's token. #}
+<script>
+fetch({{ url_for('bootbench.api_agent_health', device_id=device.device_id)|tojson }})
+  .then(function (r) { return r.json(); })
+  .then(function (data) {
+    var el = document.getElementById('agent-health');
+    if (data.ok) {
+      var h = data.health || {};
+      el.textContent = 'agent healthy · session ' + h.session_id +
+                       ' · TAC ' + h.tac_device_count;
+      el.className = '';
+    } else {
+      el.textContent = 'agent problem: ' +
+        ((data.problems && data.problems.join('; ')) || data.error || 'unknown');
+      el.className = 'delta slower';
+    }
+  })
+  .catch(function () {
+    document.getElementById('agent-health').textContent = 'agent health unavailable';
+  });
+</script>
+{% endblock %}

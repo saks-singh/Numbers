@@ -1,0 +1,44 @@
+[Unit]
+# Claims queued runs and drives them against the bench host's agent. This is
+# the only process that talks to a bench host, and the only one that writes
+# boot rows.
+#
+# Separate from the web unit on purpose: a run takes ~40 minutes, and
+# restarting a dashboard must not interrupt one. If this unit dies mid-run
+# the job itself survives -- it is a child of the Windows agent, not of this
+# process -- and the next start re-adopts it from the agent's job record.
+Description=bootbench run worker
+Documentation=file:/opt/bootbench/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bootbench
+Group=bootbench
+WorkingDirectory=/opt/bootbench/server
+
+Environment=TZ=Asia/Kolkata
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/bootbench/env
+
+ExecStart=/opt/bootbench/server/.venv/bin/python main.py worker
+
+Restart=always
+RestartSec=10
+
+# SIGTERM is a request to stop claiming new work and finish reporting the
+# current one, not to abandon it. The device advisory lock is session-level,
+# so it is released by the connection closing even on a hard kill -- a crash
+# cannot wedge a device.
+KillSignal=SIGTERM
+TimeoutStopSec=120
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/bootbench /var/log/bootbench
+
+[Install]
+WantedBy=multi-user.target

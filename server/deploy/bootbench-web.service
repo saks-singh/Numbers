@@ -1,0 +1,43 @@
+[Unit]
+# The dashboard. Read-only apart from one INSERT: pressing "Run now" queues
+# a row and returns. Nothing long-running happens in a request.
+Description=bootbench dashboard
+Documentation=file:/opt/bootbench/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bootbench
+Group=bootbench
+WorkingDirectory=/opt/bootbench/server
+
+# Pin the timezone here as well as in the crontab. croniter evaluates
+# schedules in local time, and an unpinned unit inherits whatever the
+# system's default happens to be -- which moves the nightly relative to
+# when the build share publishes.
+Environment=TZ=Asia/Kolkata
+Environment=PYTHONUNBUFFERED=1
+
+# Secrets by environment, not in a config file. Mode 0600, owned by
+# bootbench. Holds BOOTBENCH_DB_DSN, BOOTBENCH_AGENT_TOKEN,
+# BOOTBENCH_TRIGGER_TOKEN.
+EnvironmentFile=-/etc/bootbench/env
+
+ExecStart=/opt/bootbench/server/.venv/bin/waitress-serve \
+    --listen=127.0.0.1:8080 \
+    --call main:create_app
+
+Restart=always
+RestartSec=5
+
+# Restarting this unit must never disturb a run: the worker is a separate
+# process, so a 40-minute flash is not a child of the web server.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/bootbench /var/log/bootbench
+
+[Install]
+WantedBy=multi-user.target

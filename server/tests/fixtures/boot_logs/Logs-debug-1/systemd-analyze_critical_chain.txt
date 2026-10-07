@@ -1,0 +1,10 @@
+The time when unit became active or started is printed after the "@" character.
+The time the unit took to start is printed after the "+" character.
+
+multi-user.target @12.481s
+`-docker.service @8.112s +4.361s
+  `-network-online.target @8.102s
+    `-NetworkManager-wait-online.service @3.291s +4.810s
+      `-NetworkManager.service @2.998s +0.290s
+        `-dbus.socket @2.971s
+          `-sysinit.target @2.962s

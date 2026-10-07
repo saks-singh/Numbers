@@ -1,0 +1,7 @@
+10.416s android-tools-adbd.service
+ 4.810s NetworkManager-wait-online.service
+ 4.361s docker.service
+ 1.012s systemd-journal-flush.service
+  349ms systemd-udevd.service
+  290ms NetworkManager.service
+  241ms systemd-fsck-root.service

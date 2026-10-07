@@ -1,0 +1,32 @@
+# /etc/cron.d/bootbench
+#
+# ONE line, not one per device. Every device's own `schedule:` in
+# devices.yaml is evaluated inside the tick, so adding a board is a YAML
+# block and nothing else -- no crontab edit, no restart.
+#
+#   install -m 0644 bootbench.cron /etc/cron.d/bootbench
+#
+# Why every 15 minutes rather than once at 01:00: the tick asks "was there a
+# fire time between the last recorded tick and now?", not "is it 01:00 right
+# now". So a window missed because the coordinator was down, or because the
+# target's image had not landed on the share yet, is still caught later the
+# same day instead of silently skipped until tomorrow.
+#
+# The tick is cheap and does no network I/O until it has already decided a
+# device is due: at most one GET /healthz and one GET /latest-build per due
+# device. A tick that finds nothing due costs a few database queries.
+#
+# TZ must match server.yaml's `timezone` and both systemd units. croniter
+# reads local time; disagreement moves the nightly relative to when the
+# build share publishes, which shows up as "it ran before the build existed".
+
+TZ=Asia/Kolkata
+MAILTO=""
+PATH=/usr/bin:/bin
+
+*/15 * * * * bootbench cd /opt/bootbench/server && .venv/bin/python main.py tick >> /var/log/bootbench/tick.log 2>&1
+
+# Retention. Nothing else trims anything: the skill's own report caps itself
+# at 30 runs, but the pulled log trees are unbounded and a night is tens of
+# MB per device.
+17 4 * * * bootbench cd /opt/bootbench/server && .venv/bin/python main.py gc >> /var/log/bootbench/gc.log 2>&1

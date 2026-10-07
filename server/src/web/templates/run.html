@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% set nav = 'devices' %}
+{% block title %}bootbench — run {{ run.run_id }}{% endblock %}
+
+{% block body %}
+<div class="panel-head">
+  <h1>Run {{ run.run_id }}</h1>
+  <span class="tag {{ run.status|status_class }}">{{ run.status }}</span>
+  <span class="grow"></span>
+  {% if has_report %}
+  <a class="btn" href="{{ url_for('bootbench.run_report', run_id=run.run_id) }}">bootbench report</a>
+  {% endif %}
+  <a class="btn" href="{{ url_for('bootbench.run_log', run_id=run.run_id) }}">raw log</a>
+  {% if active and token_required %}
+  <form class="inline" method="post"
+        action="{{ url_for('bootbench.api_cancel', run_id=run.run_id) }}">
+    <input type="hidden" name="token" value="">
+    <button type="submit">Cancel</button>
+  </form>
+  {% endif %}
+</div>
+<p class="sub">
+  <a href="{{ url_for('bootbench.device', device_id=run.device_id) }}">{{ run.device_id }}</a>
+  · {{ run.target }} · build {{ run.build_number if run.build_number is not none else '—' }}
+  · {{ run.trigger_source }}{% if run.triggered_by %} by {{ run.triggered_by }}{% endif %}
+</p>
+
+{% if run.status == 'unreachable' and not run.acknowledged_at %}
+<div class="note bad">
+  <strong>This device is blocked.</strong>
+  The agent stopped answering and never came back, so what the board actually
+  did is unknown. The scheduler will not enqueue another run until someone
+  looks at the bench host and acknowledges this one — an unaccounted-for run
+  must not silently start another flash.
+  {% if token_required %}
+  <form class="inline" method="post" style="margin-left:8px"
+        action="{{ url_for('bootbench.api_acknowledge', run_id=run.run_id) }}">
+    <input type="hidden" name="token" value="">
+    <button type="submit">Acknowledge</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if run.status == 'partial' %}
+<div class="note">
+  <strong>Partial run.</strong>
+  {{ run.boots_recorded }} of {{ run.boots_expected }} boots were recorded.
+  bootbench exited cleanly, which is why this is not a failure — but a device
+  that quietly records five boots out of six is degrading. The per-boot
+  <span class="mono">parse_error</span> column below says which boot was lost
+  and why.
+</div>
+{% endif %}
+
+{% if run.cancel_requested and active %}
+<div class="note">
+  <strong>Cancel requested.</strong>
+  The agent honours this between boots or before the flash begins, and refuses
+  it mid-flash — interrupting PCAT while it writes a boot partition is damage,
+  not a cancellation.
+</div>
+{% endif %}
+
+<div class="panel">
+  <dl class="kv">
+    <dt>status</dt><dd>{{ run.status }}{% if run.exit_code is not none %} · exit {{ run.exit_code }}{% endif %}</dd>
+    {% if run.failure_stage %}
+    <dt>failure stage</dt><dd>{{ run.failure_stage }}</dd>
+    {% endif %}
+    {% if run.error_message %}
+    <dt>error</dt><dd>{{ run.error_class }}: {{ run.error_message }}</dd>
+    {% endif %}
+    <dt>queued</dt><dd>{{ run.queued_at|stamp('%Y-%m-%d %H:%M:%S') }}</dd>
+    <dt>started</dt><dd>{{ run.started_at|stamp('%Y-%m-%d %H:%M:%S') }}</dd>
+    <dt>finished</dt><dd>{{ run.finished_at|stamp('%Y-%m-%d %H:%M:%S') }}</dd>
+    <dt>boots</dt><dd>{{ run.boots_recorded if run.boots_recorded is not none else '—' }} / {{ run.boots_expected or '—' }}</dd>
+    <dt>stages</dt>
+    <dd>{{ (run.stages_run or run.stages_requested or [])|join(' ') }}{% if run.reflashed is sameas false %} (no flash — not comparable){% endif %}</dd>
+    <dt>build id</dt>
+    <dd>{{ run.build_number if run.build_number is not none else '— (not a master nightly)' }}</dd>
+    <dt>build folder</dt><dd class="mono">{{ run.build_folder or '—' }}</dd>
+    <dt>build path</dt><dd class="mono">{{ run.build_path or '—' }}</dd>
+    <dt>share root</dt><dd class="mono">{{ run.share_root or '—' }}</dd>
+    <dt>bench host</dt>
+    <dd class="mono">{{ run.host or '—' }} · {{ run.agent_url }}{% if run.agent_job_id %} · job {{ run.agent_job_id }}{% endif %}</dd>
+    {% if run.agent_boot_logs_dir %}
+    <dt>logs on bench</dt><dd class="mono">{{ run.agent_boot_logs_dir }}</dd>
+    {% endif %}
+    {% if files.root %}
+    <dt>mirrored to</dt>
+    <dd class="mono">{{ files.root }} · {{ files.count }} file{{ '' if files.count == 1 else 's' }} · {{ files.bytes|filesize }}</dd>
+    {% endif %}
+    {% if run.parent_run_id %}
+    <dt>retry of</dt>
+    <dd><a href="{{ url_for('bootbench.run', run_id=run.parent_run_id) }}">run {{ run.parent_run_id }}</a></dd>
+    {% endif %}
+    {% if run.readopted %}
+    <dt>re-adopted</dt><dd>yes — the agent restarted mid-job and finalized from status.json</dd>
+    {% endif %}
+    {% if run.acknowledged_at %}
+    <dt>acknowledged</dt><dd>{{ run.acknowledged_at|stamp('%Y-%m-%d %H:%M') }}</dd>
+    {% endif %}
+  </dl>
+</div>
+
+<h2>Boots</h2>
+{% if boots %}
+<table>
+  <thead>
+    <tr>
+      <th>Log</th><th>Phase</th><th class="n">#</th>
+      {% for key, label in metrics %}<th class="n">{{ label }}</th>{% endfor %}
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for b in boots %}
+    <tr>
+      <td class="mono">{{ b.log_name }}</td>
+      <td>{{ b.phase }}{% if b.displayed %} <span class="muted">(shown)</span>{% endif %}</td>
+      <td class="n">{{ b.boot_index }}</td>
+      {% for key, label in metrics %}
+      <td class="n">{{ b[key]|seconds }}</td>
+      {% endfor %}
+      <td class="muted">
+        {% if b.parse_error %}{{ b.parse_error }}
+        {% elif b.cmdline_has_debug and b.phase == 'default' %}
+          debug cmdline on a default boot — excluded from the trend
+        {% elif not b.recorded %}not recorded{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="font-size:12px">
+  All {{ boots|length }} boots the run attempted, failures included. The
+  skill's own report shows only the first boot of each phase.
+</p>
+{% else %}
+<p class="empty">
+  No boots recorded.
+  {% if run.status in ('queued', 'running') %}The run has not got that far yet.
+  {% else %}The run failed before any log could be parsed — the log below says where.{% endif %}
+</p>
+{% endif %}
+
+<h2 id="files">Transferred files</h2>
+{% if files.files %}
+<p class="muted" style="font-size:12px;margin-bottom:8px">
+  {{ files.count }} file{{ '' if files.count == 1 else 's' }},
+  {{ files.bytes|filesize }}, mirrored from the bench host and verified by
+  sha256 on arrival. <span class="mono">.txt</span>,
+  <span class="mono">.log</span> and <span class="mono">.json</span> open in
+  the browser; anything else downloads.
+</p>
+<table>
+  <thead>
+    <tr><th>File</th><th>Folder</th><th>Kind</th><th class="n">Size</th></tr>
+  </thead>
+  <tbody>
+  {% for f in files.files %}
+    <tr>
+      <td class="mono">
+        <a href="{{ url_for('bootbench.run_file', run_id=run.run_id, relpath=f.relpath) }}">{{ f.name }}</a>
+      </td>
+      <td class="mono muted">{{ f.dir or '.' }}</td>
+      <td class="muted">{{ f.kind }}</td>
+      <td class="n">{{ f.size|filesize }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if files.truncated %}
+<p class="muted" style="font-size:12px">
+  {{ files.truncated }} more file(s) not listed. The whole tree is on the
+  coordinator at <span class="mono">{{ files.root }}</span>.
+</p>
+{% endif %}
+{% else %}
+<p class="empty">
+  Nothing mirrored for this run.
+  {% if run.status in ('queued', 'running') %}Artifacts are fetched once the
+  job reaches a terminal state.
+  {% else %}The agent served no manifest, or retention has already pruned
+  this run's directory.{% endif %}
+</p>
+{% endif %}
+
+<h2>Log</h2>
+<p class="muted" style="font-size:12px;margin-bottom:8px">
+  Mirrored from the agent, so it survives the bench host pruning its own job
+  directories. <span id="log-state"></span>
+</p>
+<pre class="log" id="log">{% if not log_size %}(nothing mirrored yet){% endif %}</pre>
+{% endblock %}
+
+{% block scripts %}
+{# Byte-offset poll of a flushed file -- the same mechanism the coordinator
+   uses against the agent, so there is one implementation of "where did I get
+   to" from PCAT's stdout to this element. No SSE and no websocket: a poll
+   survives any reverse proxy and needs no extra dependency. #}
+<script>
+(function () {
+  var pane = document.getElementById('log');
+  var state = document.getElementById('log-state');
+  var url = {{ url_for('bootbench.api_run_log', run_id=run.run_id)|tojson }};
+  var offset = 0;
+  var active = {{ 'true' if active else 'false' }};
+  var pinned = true;
+
+  pane.addEventListener('scroll', function () {
+    pinned = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 40;
+  });
+
+  function poll() {
+    fetch(url + '?offset=' + offset)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.chunk) {
+          if (offset === 0) { pane.textContent = ''; }
+          pane.textContent += data.chunk;
+          if (pinned) { pane.scrollTop = pane.scrollHeight; }
+        }
+        offset = data.offset;
+        state.textContent = (data.size / 1024).toFixed(1) + ' KB';
+        if (!data.eof && active) {
+          setTimeout(poll, 2000);
+        } else if (active) {
+          state.textContent += ' · run finished, reload for the final state';
+        }
+      })
+      .catch(function () { state.textContent = 'log unavailable'; });
+  }
+  poll();
+})();
+</script>
+{% endblock %}

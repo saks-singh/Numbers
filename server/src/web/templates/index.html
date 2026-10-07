@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set nav = 'devices' %}
+{% block title %}bootbench — devices{% endblock %}
+
+{% block body %}
+<h1>Devices</h1>
+<p class="sub">
+  One card per device in <span class="mono">devices.yaml</span>. The number is
+  the <span class="mono">multi-user.target</span> time of the first boot after
+  the flash — the only boot that is comparable between runs.
+</p>
+
+{% if not token_required %}
+<div class="note plain">
+  No <span class="mono">trigger_token</span> is configured, so this dashboard is
+  read-only. Set <span class="mono">BOOTBENCH_TRIGGER_TOKEN</span> (or
+  <span class="mono">trigger_token</span> in credentials.yaml) to enable
+  <em>Run now</em>, cancel, and acknowledge.
+</div>
+{% endif %}
+
+{% for card in cards %}
+<div class="panel">
+  <div class="panel-head">
+    <h2><a href="{{ url_for('bootbench.device', device_id=card.device_id) }}">{{ card.device_id }}</a></h2>
+    {% if not card.enabled %}<span class="tag muted">disabled</span>{% endif %}
+    <span class="grow"></span>
+    {% if card.enabled and token_required %}
+    <form class="inline" method="post"
+          action="{{ url_for('bootbench.api_trigger', device_id=card.device_id) }}">
+      <input type="hidden" name="token" value="">
+      <button class="primary" type="submit">Run now</button>
+    </form>
+    {% endif %}
+  </div>
+  <p class="muted" style="margin:2px 0 16px">
+    {{ card.target }}{% if card.agent_host %} · {{ card.agent_host }}{% endif %}
+    {% if card.notes %} · {{ card.notes }}{% endif %}
+  </p>
+
+  {% if card.run_id %}
+  <div class="row">
+    <span class="tag {{ card.status_class }}">{{ card.status }}</span>
+    <span class="num">build {{ card.build_number if card.build_number is not none else '—' }}</span>
+    <span class="muted num">{{ card.started_at|stamp }}</span>
+    <span class="muted num">{{ card.duration }}</span>
+    {% if card.boots_expected and card.boots_recorded is not none
+          and card.boots_recorded < card.boots_expected %}
+    <span class="muted num">{{ card.boots_recorded }}/{{ card.boots_expected }} boots</span>
+    {% endif %}
+    {% if card.failure_stage %}<span class="muted">stage {{ card.failure_stage }}</span>{% endif %}
+    <span class="grow"></span>
+    <a href="{{ url_for('bootbench.run', run_id=card.run_id) }}">run {{ card.run_id }}</a>
+  </div>
+
+  <h3>multi-user.target</h3>
+  <div class="row">
+    <span class="big">{{ card.value_text }}{% if card.value is not none %} s{% endif %}</span>
+    {% if card.delta.significant %}
+    <span class="delta {{ card.delta.direction }}">
+      {{ card.delta.text }}{% if card.previous_build %} vs build {{ card.previous_build }}{% endif %}
+    </span>
+    {% else %}
+    <span class="muted">— no significant change</span>
+    {% endif %}
+    <span class="grow"></span>
+    <span class="spark">{{ card.sparkline }}</span>
+  </div>
+  {% else %}
+  <p class="empty">
+    No runs recorded yet. Enqueue one with <em>Run now</em>, or wait for the
+    next <span class="mono">tick</span> — <a href="{{ url_for('bootbench.schedule') }}">the
+    decision log</a> says what the scheduler made of it.
+  </p>
+  {% endif %}
+</div>
+{% endfor %}
+
+{% if not cards %}
+<p class="empty">
+  No devices. Copy <span class="mono">config/devices.yaml.example</span> to
+  <span class="mono">config/devices.yaml</span> and run
+  <span class="mono">python main.py validate-config</span>.
+</p>
+{% endif %}
+{% endblock %}

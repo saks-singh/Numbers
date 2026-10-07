@@ -1,0 +1,17 @@
+# Linux coordinator dependencies.
+#
+# The Windows client under ../client/ deliberately shares NONE of these.
+# See ../client/requirements.txt for why that asymmetry is load-bearing.
+#
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt
+
+PyYAML>=6.0            # config/*.yaml. src/utils/config_loader.py falls back
+                       # to a small stdlib parser when this is absent, so a
+                       # half-finished install degrades instead of dying.
+Jinja2>=3.1            # dashboard templates
+requests>=2.31         # the only thing here that talks to a bench host
+psycopg[binary]>=3.1   # [binary] so no libpq-dev and no compiler is needed
+Flask>=3.0             # web app (pulls Jinja2 in regardless)
+waitress>=2.1          # pure-Python WSGI server, also no compiler
+croniter>=2.0          # per-device schedule evaluation in the 15-minute tick

@@ -1,0 +1,43 @@
+# Coordinator settings. No secrets here -- those live in credentials.yaml
+# or the environment (see src/utils/credential_manager.py).
+#
+# Deliberately flat and scalar-only: the stdlib fallback YAML parser cannot
+# read lists, and no value may contain '#' (it would be truncated). Config
+# is the last thing you want failing to load for a subtle reason.
+
+# Where the coordinator keeps its own copies of logs and artifacts. Mirrored
+# from the agent so /runs/<id>/log keeps working after the agent prunes its
+# own job dirs.
+artifact_root: "/var/lib/bootbench/artifacts"
+log_file: "/var/log/bootbench/server.log"
+log_level: "INFO"
+
+# "agent" talks real HTTP to a bench host. "local_fake" drives an in-process
+# fake for hardware-free testing; it implements the same Runner protocol.
+runner_backend: "agent"
+
+# Worker loop.
+poll_interval: 5          # seconds between GET /jobs/<id> while a job runs
+claim_interval: 10        # seconds between queue polls when idle
+agent_backoff_max: 120    # cap on backoff while an agent is unreachable
+
+# Web.
+bind: "127.0.0.1"         # not internet-facing; see README's threat note
+port: 8080
+
+# Retention. `main.py gc` enforces these; nothing else does.
+keep_days: 90
+keep_runs_per_device: 400
+
+# Scheduler.
+timezone: "Asia/Kolkata"  # pin here AND in the crontab AND in both units
+retry_delay_minutes: 30
+stale_success_days: 3     # alert if a device has no success in this long
+
+# Which bootbench.py this process imports parsers from, for backfill and log
+# repair. Empty searches ../client/bootbench.py first -- the very copy the
+# bench host runs. Set it only to point somewhere else, and know that parsing
+# with a different vintage of the regexes than produced the logs yields a
+# wrong-but-plausible number rather than an error. `validate-config` prints
+# what it resolved.
+bootbench_path: ""

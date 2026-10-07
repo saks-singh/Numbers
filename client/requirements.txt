@@ -1,0 +1,43 @@
+# Windows bench-host dependencies.
+#
+# Two files live in this directory and they have different needs:
+#
+#   agent.py      standard library ONLY. Nothing below is required to run it.
+#   bootbench.py  needs the two packages listed at the bottom, and has needed
+#                 them since long before this repo existed.
+#
+# That agent.py has no dependencies is a deliberate property, not an
+# accident of it being small. Deploying to a new bench host is: copy this
+# directory, write agentconfig.json, make a Startup shortcut. No pip, no
+# virtualenv, no "which Python did I install it into", nothing to go stale
+# on a lab machine nobody logs into for three months. The agent also must
+# not import from ../server/ for the same reason.
+#
+# If you find yourself wanting a package in agent.py, that is the signal the
+# logic belongs on the Linux side instead.
+#
+#   py -3 -m pip install -r requirements.txt
+#
+# ---------------------------------------------------------------------------
+# bootbench.py only
+# ---------------------------------------------------------------------------
+
+pyserial>=3.5          # the TAC board's serial console (imported inside the
+                       # functions that use it, so bootbench.py still imports
+                       # cleanly on a machine with no hardware -- which is
+                       # what lets the Linux coordinator reuse its parsers)
+comtypes>=1.2          # Windows COM, for TACCOM.AlpacaTACServer power/EDL
+                       # control. Windows-only and has no Linux equivalent;
+                       # this single dependency is the entire reason the
+                       # bench host is a separate machine.
+
+# ---------------------------------------------------------------------------
+# Not listed, on purpose
+# ---------------------------------------------------------------------------
+# PCAT.exe       an installed Qualcomm tool, not a Python package.
+#                Default path: C:\Program Files (x86)\Qualcomm\PCAT\bin
+# adb            must be on PATH
+# powershell.exe used for build discovery on the SMB share
+#
+# `GET /healthz` on the running agent reports whether PCAT and the TAC are
+# actually reachable, so these are verifiable rather than assumed.

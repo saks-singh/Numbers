@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set nav = 'schedule' %}
+{% block title %}bootbench — schedule{% endblock %}
+
+{% block body %}
+<h1>Schedule</h1>
+<p class="sub">
+  Every decision the scheduler made, including the boring ones. This page
+  exists to answer the one question run rows cannot: <em>why didn't it run
+  last night?</em> — the whole point being that no run was created.
+</p>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>Device</th><th>Last tick</th><th>Last action</th><th>Reason</th>
+        <th class="n">Consecutive errors</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for d in devices %}
+      {% set state = states.get(d.device_id) %}
+      <tr>
+        <td><a href="{{ url_for('bootbench.device', device_id=d.device_id) }}">{{ d.device_id }}</a>
+          {% if not d.enabled %}<span class="tag muted">disabled</span>{% endif %}</td>
+        <td class="num">{{ state.last_tick_at|stamp('%Y-%m-%d %H:%M') if state else '—' }}</td>
+        <td>{% if state and state.last_action %}
+            <span class="tag {{ state.last_action|action_class }}">{{ state.last_action }}</span>
+            {% else %}<span class="muted">never evaluated</span>{% endif %}</td>
+        <td class="mono">{{ state.last_reason if state and state.last_reason else '—' }}</td>
+        <td class="n {{ 'delta slower' if state and state.consecutive_errors >= 4 }}">
+          {{ state.consecutive_errors if state else '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Decision log</h2>
+<p class="muted" style="font-size:12px">
+  {% if selected %}
+  {{ selected }} only — <a href="{{ url_for('bootbench.schedule') }}">show all devices</a>
+  {% else %}
+  All devices.
+  {% endif %}
+</p>
+
+{% if decisions %}
+<table>
+  <thead>
+    <tr>
+      <th>When</th><th>Device</th><th>Action</th><th>Reason</th>
+      <th class="n">Build</th><th>Run</th><th>Detail</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in decisions %}
+    <tr>
+      <td class="num">{{ d.decided_at|stamp('%Y-%m-%d %H:%M:%S') }}</td>
+      <td><a href="{{ url_for('bootbench.schedule', device=d.device_id) }}">{{ d.device_id }}</a></td>
+      <td><span class="tag {{ d.action|action_class }}">{{ d.action }}</span></td>
+      <td class="mono">{{ d.reason }}</td>
+      <td class="n">{{ d.build_number if d.build_number is not none else '—' }}</td>
+      <td class="n">
+        {% if d.run_id %}<a href="{{ url_for('bootbench.run', run_id=d.run_id) }}">{{ d.run_id }}</a>{% endif %}
+      </td>
+      <td class="muted">{{ d.detail or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="font-size:12px">
+  A blank run column on an <span class="mono">enqueued</span> row means the run
+  has since been pruned by <span class="mono">main.py gc</span> — the decision
+  outlives the run deliberately, so the audit trail does not disappear with
+  the artifacts.
+</p>
+{% else %}
+<p class="empty">
+  No decisions recorded. Has <span class="mono">main.py tick</span> run? It is
+  one crontab line for every device:
+  <span class="mono">*/15 * * * * … main.py tick</span>.
+</p>
+{% endif %}
+{% endblock %}
